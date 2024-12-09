@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .copy-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
+
+        .copy-btn:hover {
+            background-color: #218838;
+        }
+
+        #result {
+            margin-top: 10px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>URL Shortener</h1>
+        <input type="text" id="urlInput" placeholder="Enter URL to shorten" />
+        <button id="shortenButton">Shorten Now</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('shortenButton').addEventListener('click', async () => {
+            const originalUrl = document.getElementById('urlInput').value;
+            const resultDiv = document.getElementById('result');
+
+            if (originalUrl) {
+                try {
+                    // Send a POST request to the server
+                    const response = await fetch('http://localhost:5000/shorten', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ originalUrl }),
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        // Display the shortened URL and copy button
+                        resultDiv.innerHTML = `
+                            <p style="color: green;">
+                                Shortened URL: 
+                                <a href="${data.shortUrl}" target="_blank" id="shortUrl">${data.shortUrl}</a>
+                                <button class="copy-btn" id="copyButton">Copy</button>
+                            </p>
+                        `;
+
+                        // Add event listener to the copy button
+                        const copyButton = document.getElementById('copyButton');
+                        copyButton.addEventListener('click', () => {
+                            const shortUrl = document.getElementById('shortUrl').href;
+                            navigator.clipboard.writeText(shortUrl)
+                                .then(() => {
+                                    copyButton.textContent = 'Copied!';
+                                    setTimeout(() => copyButton.textContent = 'Copy', 2000);
+                                })
+                                .catch((error) => {
+                                    alert('Failed to copy: ' + error);
+                                });
+                        });
+
+                    } else {
+                        resultDiv.innerHTML = `<p style="color: red;">${data}</p>`;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                }
+            } else {
+                resultDiv.innerHTML = `<p style="color: red;">Please enter a URL.</p>`;
+            }
+        });
+    </script>
+
+</body>
+
+</html>
